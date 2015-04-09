@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+		xmlns="http://www.mulesoft.org/schema/mule/core" 
+		xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+		xmlns:hbase="http://www.mulesoft.org/schema/mule/hbase"
+		xmlns:spring="http://www.springframework.org/schema/beans" 
+		xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking"
+		version="EE-3.5.2"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/hbase http://www.mulesoft.org/schema/mule/hbase/current/mule-hbase.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">	
+
+    
+    <hbase:config name="hbaseTest" doc:name="Hbase">
+        <hbase:properties>
+        	<!-- Please be sure to add this properties as they are the minimal configuration needed to make hBase CloudConnector work -->
+            <hbase:property key="hbase.zookeeper.quorum">54.174.230.190</hbase:property>
+            <!-- DEPRECATED http://54.175.83.248:20550 -->
+            <hbase:property key="hbase.zookeeper.property.clientPort">2181</hbase:property>
+        </hbase:properties>
+    </hbase:config>
+    
+    <flow name="ScanWeatherObservations" doc:name="ScanWeatherObservations">
+        <http:inbound-endpoint host="localhost" port="9090" path="hbase-demo-weather-scan-weather-data" doc:name="HTTP"/>
+        <flow-ref name="ScanWeatherTable" doc:name="Flow Reference"/>
+        <collection-splitter doc:name="Collection Splitter"/>
+        <object-to-string-transformer doc:name="Object to String"/>
+    </flow>
+    
+    <flow name="ScanWeatherTable" doc:name="ScanWeatherTable" doc:description="Given Adds a row to the table, setting the weather                         description">
+        <logger message="Scanning table WeatherObservations with the following weather information: #[payload]" level="INFO" doc:name="Logger"/>
+        <hbase:get-values config-ref="hbaseTest"  tableName="Customer" doc:name="HBase" rowKey="1"/>
+        <logger message="back from Hbase: #[payload}" level="INFO" doc:name="Logger"/>
+    </flow>
+</mule>
